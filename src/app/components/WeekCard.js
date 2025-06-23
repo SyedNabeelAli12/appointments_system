@@ -16,9 +16,8 @@ import {
 } from "@/components/ui/hover-card";
 
 export default function WeekCard({ appointment, onUpdated }) {
-  if (!appointment) return null;
-
-  const [isModalOpen, setIsModalOpen] = useState(false);
+ const [isModalOpen, setIsModalOpen] = useState(false);
+if (!appointment) return null;
 
   // Subtract 2 hours from appointment start and end times
   const germanyOffsetMs = 2 * 60 * 60 * 1000;
