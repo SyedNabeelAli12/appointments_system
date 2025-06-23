@@ -5,21 +5,21 @@ export async function GET() {
   try {
     const { data, error } = await supabase
       .from("patients")
-      .select("id, firstname , lastname, birth_date", { distinct: true });
+      .select("id, firstname, lastname, birth_date", { distinct: true })
+      .eq("active", true);
 
     if (error) {
       return new Response(JSON.stringify({ error: error.message }), {
         status: 500,
       });
     }
-console.log(data)
+    console.log(data);
     return new Response(JSON.stringify({ labels: data }), {
       status: 200,
     });
   } catch (err) {
-    return new Response(
-      JSON.stringify({ error: "Something went wrong" }),
-      { status: 500 }
-    );
+    return new Response(JSON.stringify({ error: "Something went wrong" }), {
+      status: 500,
+    });
   }
 }
