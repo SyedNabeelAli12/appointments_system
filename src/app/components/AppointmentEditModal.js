@@ -2,12 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { X as XIcon } from "lucide-react";
+import DownloadAttachmentsButton from './Downloader';
 
 export default function AppointmentEditModal({
   appointment,
   isOpen,
   onClose,
   onSave,
+    newAppointment,
+        setNewAppointment,
 }) {
   const [form, setForm] = useState({ ...appointment });
   const [loading, setLoading] = useState(false);
@@ -60,18 +63,81 @@ export default function AppointmentEditModal({
     }
 
     setLoading(true);
+    
     setError(null);
     try {
       await onSave(form);
+      setNewAppointment(!newAppointment)
       onClose();
     } catch (err) {
       setError(err.message || "Fehler beim Speichern");
     } finally {
+
       setLoading(false);
     }
   }
 
   if (!isOpen) return null;
+
+  const editableFields = [
+    {
+      label: "Titel",
+      name: "title",
+      type: "text",
+      required: true,
+    },
+    {
+      label: "Startzeit",
+      name: "start",
+      type: "datetime-local",
+      required: true,
+      formatValue: (v) => (v ? v.slice(0, 16) : ""),
+    },
+    {
+      label: "Endzeit",
+      name: "end",
+      type: "datetime-local",
+      required: true,
+      formatValue: (v) => (v ? v.slice(0, 16) : ""),
+    },
+    {
+      label: "Ort",
+      name: "location",
+      type: "text",
+      required: true,
+    },
+    {
+      label: "Notizen",
+      name: "notes",
+      type: "textarea",
+      required: true,
+    },
+  ];
+
+  const disabledFields = [
+    {
+      label: "Kategorie",
+      value: form.categories?.label || "Keine Kategorie",
+    },
+    {
+      label: "Farbe der Kategorie",
+      value: form.categories?.color || "Keine Farbe",
+    },
+    {
+      label: "Patient",
+      value: form.patients
+        ? `${form.patients.firstname} ${form.patients.lastname}`
+        : "Kein Patient",
+    },
+    {
+      label: "Zuständiger Typ",
+      value: form.appointment_assignee?.user_type || "Unbekannt",
+    },
+    {
+      label: "Zuständiger User",
+      value: form.appointment_assignee?.user || "Unbekannt",
+    },
+  ];
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
@@ -87,84 +153,74 @@ export default function AppointmentEditModal({
         <h2 className="text-xl font-semibold mb-4">Termin bearbeiten</h2>
 
         <div className="space-y-4 max-h-[70vh] overflow-auto">
-          <label className="block text-sm font-medium text-gray-700">
-            Titel <span className="text-red-500">*</span>
-          </label>
-          <input
-            name="title"
-            value={form.title || ""}
-            onChange={handleChange}
-            required
-            className="w-full rounded-md border border-gray-300 p-2 text-sm focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
-          />
+          {editableFields.map((field) => (
+            <div key={field.name}>
+              <label className="block text-sm font-medium text-gray-700">
+                {field.label} {field.required && <span className="text-red-500">*</span>}
+              </label>
+              {field.type === "textarea" ? (
+                <textarea
+                  name={field.name}
+                  value={form[field.name] || ""}
+                  onChange={handleChange}
+                  rows={4}
+                  required={field.required}
+                  className="w-full rounded-md border border-gray-300 p-2 text-sm focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
+                />
+              ) : (
+                <input
+                  type={field.type}
+                  name={field.name}
+                  value={
+                    field.formatValue
+                      ? field.formatValue(form[field.name])
+                      : form[field.name] || ""
+                  }
+                  onChange={handleChange}
+                  required={field.required}
+                  className="w-full rounded-md border border-gray-300 p-2 text-sm focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
+                />
+              )}
+            </div>
+          ))}
 
-          <label className="block text-sm font-medium text-gray-700">
-            Startzeit <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="datetime-local"
-            name="start"
-            value={form.start ? form.start.slice(0, 16) : ""}
-            onChange={handleChange}
-            required
-            className="w-full rounded-md border border-gray-300 p-2 text-sm focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
-          />
+          {disabledFields.map((field, idx) => (
+            <div key={idx}>
+              <label className="block text-sm font-medium text-gray-700">
+                {field.label}
+              </label>
+              <input
+                value={field.value}
+                disabled
+                className="w-full bg-gray-100 rounded-md border border-gray-300 p-2 text-sm text-gray-600"
+              />
+            </div>
+            
+          ))}
+<DownloadAttachmentsButton appointmentID={appointment.id}/>
 
-          <label className="block text-sm font-medium text-gray-700">
-            Endzeit <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="datetime-local"
-            name="end"
-            value={form.end ? form.end.slice(0, 16) : ""}
-            onChange={handleChange}
-            required
-            className="w-full rounded-md border border-gray-300 p-2 text-sm focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
-          />
+          {error && (
+            <p className="text-red-600 mt-2 text-sm font-medium">{error}</p>
+          )}
 
-          <label className="block text-sm font-medium text-gray-700">
-            Ort <span className="text-red-500">*</span>
-          </label>
-          <input
-            name="location"
-            value={form.location || ""}
-            onChange={handleChange}
-            required
-            className="w-full rounded-md border border-gray-300 p-2 text-sm focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
-          />
+          <div className="mt-6 flex justify-end space-x-2">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 text-sm font-medium border rounded-md hover:bg-gray-100"
+              disabled={loading}
+            >
+              Abbrechen
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={loading}
+              className="px-4 py-2 bg-black text-white text-sm font-medium rounded-md hover:bg-gray-800"
+            >
 
-          <label className="block text-sm font-medium text-gray-700">
-            Notizen <span className="text-red-500">*</span>
-          </label>
-          <textarea
-            name="notes"
-            value={form.notes || ""}
-            onChange={handleChange}
-            rows={4}
-            required
-            className="w-full rounded-md border border-gray-300 p-2 text-sm focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
-          />
-        </div>
-
-        {error && (
-          <p className="text-red-600 mt-2 text-sm font-medium">{error}</p>
-        )}
-
-        <div className="mt-6 flex justify-end space-x-2">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-sm font-medium border rounded-md hover:bg-gray-100"
-            disabled={loading}
-          >
-            Abbrechen
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={loading}
-            className="px-4 py-2 bg-black text-white text-sm font-medium rounded-md hover:bg-gray-800"
-          >
-            {loading ? "Speichern..." : "Speichern"}
-          </button>
+        
+              {loading ? "Speichern..." : "Speichern"}
+            </button>
+          </div>
         </div>
       </div>
     </div>

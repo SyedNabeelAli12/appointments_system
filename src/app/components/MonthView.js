@@ -32,7 +32,12 @@ function getDaysInMonth(year, month) {
   return result;
 }
 
-export default function MonthView({ appointments, selectedDate }) {
+export default function MonthView({
+  appointments,
+  selectedDate,
+  newAppointment,
+  setNewAppointment,
+}) {
   const baseDate = new Date(selectedDate);
   const [selectedInDate, setSelectedInDate] = useState(baseDate);
   const [today, setToday] = useState(null);
@@ -60,8 +65,7 @@ export default function MonthView({ appointments, selectedDate }) {
     return acc;
   }, {});
 
-  const getAppointmentsForDate = (date) =>
-    grouped[date?.toDateString()] || [];
+  const getAppointmentsForDate = (date) => grouped[date?.toDateString()] || [];
 
   return (
     <div className="flex">
@@ -122,7 +126,9 @@ export default function MonthView({ appointments, selectedDate }) {
                   key={app.id}
                   className="truncate text-xs rounded px-2 py-0.5 mt-0.5 bg-gray-200 flex items-center"
                   style={{
-                    borderLeft: `4px solid ${app.categories?.color || "transparent"}`,
+                    borderLeft: `4px solid ${
+                      app.categories?.color || "transparent"
+                    }`,
                   }}
                 >
                   {app.title.length > 20
@@ -143,10 +149,17 @@ export default function MonthView({ appointments, selectedDate }) {
         </h2>
 
         {getAppointmentsForDate(selectedInDate).length === 0 ? (
-          <p className="text-sm text-gray-500">Keine weiteren Termine gefunden</p>
+          <p className="text-sm text-gray-500">
+            Keine weiteren Termine gefunden
+          </p>
         ) : (
           getAppointmentsForDate(selectedInDate).map((app) => (
-            <AppointmentCard key={app.id} appointment={app} />
+            <AppointmentCard
+              key={app.id}
+              appointment={app}
+              newAppointment={newAppointment}
+              setNewAppointment={setNewAppointment}
+            />
           ))
         )}
       </div>

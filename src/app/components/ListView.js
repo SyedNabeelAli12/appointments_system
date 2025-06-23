@@ -1,8 +1,13 @@
 "use client";
 import { useState } from "react";
 import AppointmentCard from "./AppointmentCard";
+import { limit } from "../common/commonvar";
 
-export default function ListView({ appointments: initialAppointments }) {
+export default function ListView({
+  appointments: initialAppointments,
+  newAppointment,
+  setNewAppointment,
+}) {
   const [appointments, setAppointments] = useState(initialAppointments);
   const [loadingOlder, setLoadingOlder] = useState(false);
   const [loadingNewer, setLoadingNewer] = useState(false);
@@ -36,17 +41,18 @@ export default function ListView({ appointments: initialAppointments }) {
     const oldest = appointments.reduce((a, b) =>
       new Date(a.start) < new Date(b.start) ? a : b
     );
-
     try {
       const res = await fetch("/api/appointments/previous", {
         method: "POST",
-        body: JSON.stringify({ referenceDate: oldest.start, limit: 10 }),
+        body: JSON.stringify({ referenceDate: oldest.start, limit: limit }),
       });
       const json = await res.json();
 
       if (res.ok && json.appointments?.length) {
         const merged = [...appointments, ...json.appointments];
-        const unique = Array.from(new Map(merged.map(a => [a.id, a])).values());
+        const unique = Array.from(
+          new Map(merged.map((a) => [a.id, a])).values()
+        );
         unique.sort((a, b) => new Date(a.start) - new Date(b.start));
         setAppointments(unique);
       }
@@ -68,13 +74,15 @@ export default function ListView({ appointments: initialAppointments }) {
     try {
       const res = await fetch("/api/appointments/next", {
         method: "POST",
-        body: JSON.stringify({ referenceDate: latest.start, limit: 10 }),
+        body: JSON.stringify({ referenceDate: latest.start, limit: limit }),
       });
       const json = await res.json();
 
       if (res.ok && json.appointments?.length) {
         const merged = [...appointments, ...json.appointments];
-        const unique = Array.from(new Map(merged.map(a => [a.id, a])).values());
+        const unique = Array.from(
+          new Map(merged.map((a) => [a.id, a])).values()
+        );
         unique.sort((a, b) => new Date(a.start) - new Date(b.start));
         setAppointments(unique);
       }
@@ -118,7 +126,12 @@ export default function ListView({ appointments: initialAppointments }) {
 
               <div className="space-y-4 mt-2">
                 {apps.map((app) => (
-                  <AppointmentCard key={app.id} appointment={app} />
+                  <AppointmentCard
+                    key={app.id}
+                    appointment={app}
+                    newAppointment={newAppointment}
+                    setNewAppointment={setNewAppointment}
+                  />
                 ))}
               </div>
             </div>

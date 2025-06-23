@@ -14,20 +14,22 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import { germanyOffsetMs } from "../common/commonvar";
 
-export default function WeekCard({ appointment, onUpdated }) {
- const [isModalOpen, setIsModalOpen] = useState(false);
-if (!appointment) return null;
-
-  // Subtract 2 hours from appointment start and end times
-  const germanyOffsetMs = 2 * 60 * 60 * 1000;
+export default function WeekCard({
+  appointment,
+  onUpdated,
+  newAppointment,
+  setNewAppointment,
+}) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  if (!appointment) return null;
 
   const appointmentStart = new Date(appointment.start);
   const appointmentEnd = new Date(appointment.end || appointment.start);
 
   const start = new Date(appointmentStart.getTime() - germanyOffsetMs);
   const end = new Date(appointmentEnd.getTime() - germanyOffsetMs);
-
   const now = new Date(new Date().getTime() + germanyOffsetMs);
 
   const isSameDay = (a, b) =>
@@ -62,21 +64,26 @@ if (!appointment) return null;
       )
     );
 
+  function lightenColor(hex, percent) {
+    hex = hex.replace(/^#/, "");
 
-    function lightenColor(hex, percent) {
-  hex = hex.replace(/^#/, "");
+    if (hex.length === 3) {
+      hex = hex
+        .split("")
+        .map((char) => char + char)
+        .join("");
+    }
 
-  if (hex.length === 3) {
-    hex = hex.split("").map((char) => char + char).join("");
+    const num = parseInt(hex, 16);
+    const r = (num >> 16) + Math.round((255 - (num >> 16)) * (percent / 100));
+    const g =
+      ((num >> 8) & 0x00ff) +
+      Math.round((255 - ((num >> 8) & 0x00ff)) * (percent / 100));
+    const b =
+      (num & 0x0000ff) + Math.round((255 - (num & 0x0000ff)) * (percent / 100));
+
+    return `#${((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1)}`;
   }
-
-  const num = parseInt(hex, 16);
-  const r = (num >> 16) + Math.round((255 - (num >> 16)) * (percent / 100));
-  const g = ((num >> 8) & 0x00ff) + Math.round((255 - ((num >> 8) & 0x00ff)) * (percent / 100));
-  const b = (num & 0x0000ff) + Math.round((255 - (num & 0x0000ff)) * (percent / 100));
-
-  return `#${(1 << 24 | (r << 16) | (g << 8) | b).toString(16).slice(1)}`;
-}
 
   return (
     <>
@@ -91,7 +98,10 @@ if (!appointment) return null;
             <div
               className="w-1.5"
               style={{
-                backgroundColor: darkenColor(appointment?.categories?.color, 0.2),
+                backgroundColor: darkenColor(
+                  appointment?.categories?.color,
+                  0.2
+                ),
               }}
             />
 
@@ -103,7 +113,9 @@ if (!appointment) return null;
               </div>
 
               <div className="space-y-2 pr-6">
-                <p className="font-bold text-sm leading-snug">{appointment.title}</p>
+                <p className="font-bold text-sm leading-snug">
+                  {appointment.title}
+                </p>
 
                 <div className="flex items-center gap-2 text-gray-700">
                   <Clock size={14} />
@@ -182,6 +194,8 @@ if (!appointment) return null;
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSave={handleSave}
+        newAppointment={newAppointment}
+        setNewAppointment={setNewAppointment}
       />
     </>
   );

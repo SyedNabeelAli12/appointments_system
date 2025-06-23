@@ -47,7 +47,12 @@ function getDayKey(date) {
   return `day-${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
 }
 
-export default function WeeklyCalendarGrid({ appointments, selectedDate }) {
+export default function WeeklyCalendarGrid({
+  appointments,
+  selectedDate,
+  newAppointment,
+  setNewAppointment,
+}) {
   const startOfWeek = useMemo(
     () => getStartOfWeek(selectedDate ?? new Date()),
     [selectedDate]
@@ -83,7 +88,10 @@ export default function WeeklyCalendarGrid({ appointments, selectedDate }) {
   const minusTwoHoursMs = 2 * 60 * 60 * 1000;
 
   return (
-    <div className="relative border border-gray-300" style={{ height: totalGridHeight }}>
+    <div
+      className="relative border border-gray-300"
+      style={{ height: totalGridHeight }}
+    >
       {/* Time now line (red) */}
       {isTodayVisible && offsetY >= 0 && offsetY <= totalGridHeight && (
         <div
@@ -146,7 +154,9 @@ export default function WeeklyCalendarGrid({ appointments, selectedDate }) {
               // Filter appointments with start time minus 2 hours
               const filteredApps = appointments.filter((app) => {
                 const originalStart = new Date(app.start);
-                const adjustedStart = new Date(originalStart.getTime() - minusTwoHoursMs);
+                const adjustedStart = new Date(
+                  originalStart.getTime() - minusTwoHoursMs
+                );
 
                 return (
                   adjustedStart.getFullYear() === day.getFullYear() &&
@@ -159,12 +169,18 @@ export default function WeeklyCalendarGrid({ appointments, selectedDate }) {
               return (
                 <div
                   key={`${getDayKey(day)}-${hour}`}
-                  className={`border h-24 relative ${isToday ? "bg-green-50" : ""}`}
+                  className={`border h-24 relative ${
+                    isToday ? "bg-green-50" : ""
+                  }`}
                 >
                   {filteredApps.map((app) => (
                     <div key={app.id} className="absolute inset-1">
                       {/* Pass appointment normally; WeekCard handles its own offset if needed */}
-                      <WeekCard appointment={app} />
+                      <WeekCard
+                        appointment={app}
+                        newAppointment={newAppointment}
+                        setNewAppointment={setNewAppointment}
+                      />
                     </div>
                   ))}
                 </div>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 
-export default function AppointmentForm(    {newAppointment ,setNewAppointment}) {
+export default function AppointmentForm({ newAppointment, setNewAppointment }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
@@ -14,6 +14,9 @@ export default function AppointmentForm(    {newAppointment ,setNewAppointment})
   const [apptCategoryId, setApptCategoryId] = useState("");
   const [apptNotes, setApptNotes] = useState("");
   const [apptTitle, setApptTitle] = useState("");
+
+  const [attachment, setAttachment] = useState(null); // will hold base64 string
+  const [attachmentName, setAttachmentName] = useState("");
 
   const [patients, setPatients] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -72,6 +75,44 @@ export default function AppointmentForm(    {newAppointment ,setNewAppointment})
     );
   }, [patientSearch, patients]);
 
+  // Helper: Convert file to base64 string
+  function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
+  }
+
+  async function handleFileChange(e) {
+    setError(null);
+    const file = e.target.files[0];
+    if (!file) {
+      setAttachment(null);
+      setAttachmentName("");
+      return;
+    }
+
+    if (file.size > 200 * 1024) {
+      setError("Datei darf maximal 200 KB groß sein.");
+      e.target.value = ""; // reset file input
+      setAttachment(null);
+      setAttachmentName("");
+      return;
+    }
+
+    try {
+      const base64 = await fileToBase64(file);
+      setAttachment(base64);
+      setAttachmentName(file.name);
+    } catch {
+      setError("Fehler beim Lesen der Datei.");
+      setAttachment(null);
+      setAttachmentName("");
+    }
+  }
+
   async function postData(url, body) {
     setLoading(true);
     setError(null);
@@ -94,7 +135,9 @@ export default function AppointmentForm(    {newAppointment ,setNewAppointment})
       setApptNotes("");
       setApptTitle("");
       setPatientSearch("");
-      setNewAppointment(!newAppointment)
+      setAttachment(null);
+      setAttachmentName("");
+      setNewAppointment(!newAppointment);
       return json;
     } catch (err) {
       setError(err.message);
@@ -143,10 +186,12 @@ export default function AppointmentForm(    {newAppointment ,setNewAppointment})
       start: apptStart,
       end: apptEnd,
       location: apptLocation,
-      patient: apptPatientId|| undefined,
+      patient: apptPatientId || undefined,
       category: apptCategoryId,
       notes: apptNotes,
       title: apptTitle,
+      attachment, // base64 string or null
+      attachmentName, // send file name as well
     });
   }
 
@@ -259,6 +304,20 @@ export default function AppointmentForm(    {newAppointment ,setNewAppointment})
             required
           />
         </label>
+
+        <label>
+          Anhang (Datei, max. 200 KB)
+          <input
+            type="file"
+            onChange={handleFileChange}
+            className="w-full border p-2 rounded"
+            accept="*"
+          />
+          {attachmentName && (
+            <p className="mt-1 text-sm text-gray-600">Ausgewählt: {attachmentName}</p>
+          )}
+        </label>
+        <span>Es wäre besser, die URL des Verzeichnisordners in der Datenbank zu speichern und den Anhang dort zu speichern.</span>
 
         <button
           type="submit"

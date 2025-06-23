@@ -27,7 +27,11 @@ export async function POST(req) {
           id,
           firstname,
           lastname
-        )
+        ),
+         appointment_assignee (
+      user,
+      user_type
+    )
       `
       )
       .lt("start", referenceDate)

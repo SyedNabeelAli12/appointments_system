@@ -65,6 +65,7 @@ export async function POST(req) {
       category,
       patient,
       location,
+      attachment
     } = await req.json();
 
     const appointmentId = uuidv4();
@@ -83,6 +84,8 @@ export async function POST(req) {
         category,
         patient,
         location,
+        attachements:[attachment]
+
       }]);
 
     if (appointmentError) {

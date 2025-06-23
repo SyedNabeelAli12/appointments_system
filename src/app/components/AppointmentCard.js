@@ -16,14 +16,13 @@ import {
 } from "lucide-react";
 
 import AppointmentEditModal from "./AppointmentEditModal";
+import { germanyOffsetMs } from "../common/commonvar";
 
-export default function AppointmentCard({ appointment, onUpdated }) {
+export default function AppointmentCard({ appointment, onUpdated,newAppointment, setNewAppointment }) {
   // const [color, setColor] = useState("#999999");
   const [isModalOpen, setIsModalOpen] = useState(false);
-
   // Convert ISO strings to Date objects (assumes appointment.start/end are ISO strings)
   const appointmentStart = new Date(appointment.start); // this is in UTC
-  const germanyOffsetMs = 2 * 60 * 60 * 1000; // 2 hours offset for Berlin
   const start = new Date(appointmentStart.getTime() - germanyOffsetMs);
 
   // Using appointment.end might be better, but you had appointment.start for end as well, I assume a typo?
@@ -178,6 +177,9 @@ export default function AppointmentCard({ appointment, onUpdated }) {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSave={handleSave}
+        newAppointment = {newAppointment}
+        setNewAppointment = {setNewAppointment}
+          
       />
     </>
   );
