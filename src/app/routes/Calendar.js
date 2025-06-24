@@ -13,12 +13,13 @@ import {
 import { limit } from "../common/commonvar";
 
 export default function CalendarPage() {
-  const [appointments, setAppointments] = useState([]); // for list view
-  const [weeklyAppointments, setWeeklyAppointments] = useState([]); // for week view
-  const [monthlyAppointments, setMonthlyAppointments] = useState([]); // for month view
+  const [appointments, setAppointments] = useState([]);
+  const [weeklyAppointments, setWeeklyAppointments] = useState([]);
+  const [monthlyAppointments, setMonthlyAppointments] = useState([]);
   const [view, setView] = useState("woche");
   const [showForm, setShowForm] = useState(false);
   const [newAppointment, setNewAppointment] = useState(true);
+  const [loading, setLoading] = useState(false); // loader state
 
   const [filters, setFilters] = useState({
     category: "",
@@ -31,9 +32,9 @@ export default function CalendarPage() {
     new Date().toISOString().split("T")[0]
   );
 
-  // Fetch generic appointments for list view
   const fetchAppointments = useCallback(
     async (activeFilters = filters) => {
+      setLoading(true);
       try {
         const response = await fetch("/api/appointments/filter_limit", {
           method: "POST",
@@ -56,13 +57,15 @@ export default function CalendarPage() {
         }
       } catch (error) {
         console.error("Error fetching appointments:", error);
+      } finally {
+        setLoading(false);
       }
     },
     [filters]
   );
 
-  // Fetch weekly appointments
   const fetchWeeklyAppointments = useCallback(async () => {
+    setLoading(true);
     try {
       const startOfWeek = getStartOfWeek(selectedDate);
       const endOfWeek = new Date(startOfWeek);
@@ -91,11 +94,13 @@ export default function CalendarPage() {
     } catch (error) {
       console.error("Error fetching weekly appointments:", error);
       setWeeklyAppointments([]);
+    } finally {
+      setLoading(false);
     }
   }, [filters.category, filters.searchQuery, selectedDate]);
 
-  // Fetch monthly appointments
   const fetchMonthlyAppointments = useCallback(async () => {
+    setLoading(true);
     try {
       const startOfMonth = getStartOfMonth(selectedDate);
       const endOfMonth = getEndOfMonth(selectedDate);
@@ -122,15 +127,15 @@ export default function CalendarPage() {
     } catch (error) {
       console.error("Error fetching monthly appointments:", error);
       setMonthlyAppointments([]);
+    } finally {
+      setLoading(false);
     }
   }, [filters.category, filters.searchQuery, selectedDate]);
 
-  // Load list view appointments on mount
   useEffect(() => {
     fetchAppointments();
   }, []);
 
-  // Load weekly or monthly appointments when filters, date or view changes
   useEffect(() => {
     if (view === "woche") {
       fetchWeeklyAppointments();
@@ -189,31 +194,41 @@ export default function CalendarPage() {
         </div>
       )}
 
-      <div className="px-4">
-        {view === "woche" && (
-          <WeeklyCalendarGrid
-            appointments={weeklyAppointments}
-            selectedDate={selectedDate}
-            newAppointment={newAppointment}
-            setNewAppointment={setNewAppointment}
-          />
-        )}
-        {view === "liste" && (
-          <ListView
-            appointments={appointments}
-            newAppointment={newAppointment}
-            setNewAppointment={setNewAppointment}
-          />
-        )}
-        {view === "monat" && (
-          <MonthView
-            appointments={monthlyAppointments}
-            selectedDate={selectedDate}
-            newAppointment={newAppointment}
-            setNewAppointment={setNewAppointment}
-          />
-        )}
-      </div>
+      {/* Loader */}
+      {loading && (
+        <div className="flex justify-center items-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      )}
+
+      {/* View Section */}
+      {!loading && (
+        <div className="px-4">
+          {view === "woche" && (
+            <WeeklyCalendarGrid
+              appointments={weeklyAppointments}
+              selectedDate={selectedDate}
+              newAppointment={newAppointment}
+              setNewAppointment={setNewAppointment}
+            />
+          )}
+          {view === "liste" && (
+            <ListView
+              appointments={appointments}
+              newAppointment={newAppointment}
+              setNewAppointment={setNewAppointment}
+            />
+          )}
+          {view === "monat" && (
+            <MonthView
+              appointments={monthlyAppointments}
+              selectedDate={selectedDate}
+              newAppointment={newAppointment}
+              setNewAppointment={setNewAppointment}
+            />
+          )}
+        </div>
+      )}
     </div>
   );
 }
