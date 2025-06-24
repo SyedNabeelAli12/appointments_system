@@ -56,48 +56,46 @@ export default function AppointmentEditModal({
   }
 
   async function updateAppointment(appointmentId, formData) {
-  const res = await fetch(`/api/appointments/edit/${appointmentId}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(formData),
-  });
+    const res = await fetch(`/api/appointments/edit/${appointmentId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),
+    });
 
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.error || 'Fehler beim Aktualisieren des Termins');
-  }
-
-  return await res.json();
-}
-
-
-async function handleSave() {
-  const validationError = validateForm();
-  if (validationError) {
-    setError(validationError);
-    return;
-  }
-
-  setLoading(true);
-  setError(null);
-
-  try {
-    if (form.id) {
-      // Edit existing appointment
-      await updateAppointment(form.id, form);
-    } else {
-      // Create new appointment - assuming your existing onSave does that
-      await onSave(form);
-      setNewAppointment(!newAppointment);
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || "Fehler beim Aktualisieren des Termins");
     }
-    onClose();
-  } catch (err) {
-    setError(err.message || "Fehler beim Speichern");
-  } finally {
-    setLoading(false);
+    setNewAppointment(!newAppointment);
+    return await res.json();
   }
-}
 
+  async function handleSave() {
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      if (form.id) {
+        // Edit existing appointment
+        await updateAppointment(form.id, form);
+      } else {
+        // Create new appointment - assuming your existing onSave does that
+        await onSave(form);
+        setNewAppointment(!newAppointment);
+      }
+      onClose();
+    } catch (err) {
+      setError(err.message || "Fehler beim Speichern");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   if (!isOpen) return null;
 
