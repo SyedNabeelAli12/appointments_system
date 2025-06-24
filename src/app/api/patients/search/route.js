@@ -1,11 +1,19 @@
-// app/api/categories/labels/route.js
+// app/api/patients/search/route.js
 import { supabase } from "../../../lib/supabaseClient";
 
-export async function GET() {
+export async function GET(request) {
+  const { searchParams } = new URL(request.url);
+  const query = searchParams.get("query")?.trim();
+
+  if (!query) {
+    return new Response(JSON.stringify({ labels: [] }), { status: 200 });
+  }
+
   try {
     const { data, error } = await supabase
       .from("patients")
-      .select("id, firstname, lastname, birth_date", { distinct: true })
+      .select("id, firstname, lastname, birth_date")
+      .ilike("lastname", `%${query}%`) // case-insensitive match
       .eq("active", true);
 
     if (error) {
@@ -13,7 +21,7 @@ export async function GET() {
         status: 500,
       });
     }
-    console.log(data);
+
     return new Response(JSON.stringify({ labels: data }), {
       status: 200,
     });

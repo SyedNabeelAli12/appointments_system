@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
+import { Search } from "lucide-react";
 
 export default function AppointmentForm({ newAppointment, setNewAppointment }) {
   const [loading, setLoading] = useState(false);
@@ -15,37 +16,14 @@ export default function AppointmentForm({ newAppointment, setNewAppointment }) {
   const [apptNotes, setApptNotes] = useState("");
   const [apptTitle, setApptTitle] = useState("");
 
-  const [attachment, setAttachment] = useState(null); 
+  const [attachment, setAttachment] = useState(null);
   const [attachmentName, setAttachmentName] = useState("");
 
   const [patients, setPatients] = useState([]);
   const [categories, setCategories] = useState([]);
   const [patientSearch, setPatientSearch] = useState("");
 
-  useEffect(() => {
-    const fetchPatients = async () => {
-      try {
-        const res = await fetch("/api/patients/fetch");
-        const result = await res.json();
-        if (res.ok && result.labels) {
-          const formatted = result.labels.map((item, index) => ({
-            id: item.id ?? index.toString(),
-            firstname: item.firstname ?? "",
-            lastname: item.lastname ?? "",
-            birth_date: item.birth_date ?? null,
-            name: item.name ?? item.lastname,
-          }));
-          setPatients(formatted);
-        } else {
-          console.error("Fehler beim Laden der Patienten:", result.error);
-        }
-      } catch (err) {
-        console.error("Fehler beim Abrufen der Patienten:", err);
-      }
-    };
-    fetchPatients();
-  }, []);
-
+  // Only fetch categories on load
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -58,8 +36,6 @@ export default function AppointmentForm({ newAppointment, setNewAppointment }) {
             label: item.label ?? item.name,
           }));
           setCategories(formatted);
-        } else {
-          console.error("Fehler beim Laden der Kategorien:", result.error);
         }
       } catch (err) {
         console.error("Fehler beim Abrufen der Kategorien:", err);
@@ -68,14 +44,35 @@ export default function AppointmentForm({ newAppointment, setNewAppointment }) {
     fetchCategories();
   }, []);
 
-  const filteredPatients = useMemo(() => {
-    if (!patientSearch.trim()) return patients;
-    return patients.filter((p) =>
-      p.lastname.toLowerCase().includes(patientSearch.toLowerCase())
-    );
-  }, [patientSearch, patients]);
+  async function fetchPatientsBySearch() {
+    if (!patientSearch.trim()) {
+      setPatients([]);
+      return;
+    }
 
-  // convert file to base64 string
+    try {
+      const res = await fetch(`/api/patients/search?query=${encodeURIComponent(patientSearch)}`);
+      const result = await res.json();
+
+      if (res.ok && result.labels) {
+        const formatted = result.labels.map((item, index) => ({
+          id: item.id ?? index.toString(),
+          firstname: item.firstname ?? "",
+          lastname: item.lastname ?? "",
+          birth_date: item.birth_date ?? null,
+          name: item.name ?? item.lastname,
+        }));
+        setPatients(formatted);
+      } else {
+        setPatients([]);
+        console.error("Fehler beim Suchen:", result.error);
+      }
+    } catch (err) {
+      console.error("Netzwerkfehler bei der Suche:", err);
+      setPatients([]);
+    }
+  }
+
   function fileToBase64(file) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -88,15 +85,11 @@ export default function AppointmentForm({ newAppointment, setNewAppointment }) {
   async function handleFileChange(e) {
     setError(null);
     const file = e.target.files[0];
-    if (!file) {
-      setAttachment(null);
-      setAttachmentName("");
-      return;
-    }
+    if (!file) return;
 
     if (file.size > 200 * 1024) {
       setError("Datei darf maximal 200 KB groß sein.");
-      e.target.value = ""; 
+      e.target.value = "";
       setAttachment(null);
       setAttachmentName("");
       return;
@@ -126,7 +119,7 @@ export default function AppointmentForm({ newAppointment, setNewAppointment }) {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Fehler beim Speichern");
       setSuccessMsg("Termin erfolgreich erstellt!");
-      //from reset
+
       setApptStart("");
       setApptEnd("");
       setApptLocation("");
@@ -137,11 +130,11 @@ export default function AppointmentForm({ newAppointment, setNewAppointment }) {
       setPatientSearch("");
       setAttachment(null);
       setAttachmentName("");
+      setPatients([]);
+
       setNewAppointment(!newAppointment);
-      return json;
     } catch (err) {
       setError(err.message);
-      throw err;
     } finally {
       setLoading(false);
     }
@@ -152,14 +145,7 @@ export default function AppointmentForm({ newAppointment, setNewAppointment }) {
     setError(null);
     setSuccessMsg(null);
 
-    if (
-      !apptStart ||
-      !apptEnd ||
-      !apptLocation ||
-      !apptCategoryId ||
-      !apptNotes ||
-      !apptTitle
-    ) {
+    if (!apptStart || !apptEnd || !apptLocation || !apptCategoryId || !apptNotes || !apptTitle) {
       return setError("Bitte füllen Sie alle Pflichtfelder aus.");
     }
 
@@ -189,14 +175,14 @@ export default function AppointmentForm({ newAppointment, setNewAppointment }) {
       category: apptCategoryId,
       notes: apptNotes,
       title: apptTitle,
-      attachment, 
+      attachment,
       attachmentName,
     });
   }
 
   return (
-    <div className="max-w-3xl mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6">Termin erstellen</h1>
+    <div className="max-w-3xl mx-auto p-4 text-sm">
+      <h1 className="text-xl font-bold mb-6">Termin erstellen</h1>
 
       {error && <p className="text-red-600 mb-4">{error}</p>}
       {successMsg && <p className="text-green-600 mb-4">{successMsg}</p>}
@@ -208,7 +194,7 @@ export default function AppointmentForm({ newAppointment, setNewAppointment }) {
             type="datetime-local"
             value={apptStart}
             onChange={(e) => setApptStart(e.target.value)}
-            className="w-full border p-2 rounded"
+            className="w-full border p-2 rounded text-[13px]"
             min={new Date().toISOString().slice(0, 16)}
             required
           />
@@ -220,7 +206,7 @@ export default function AppointmentForm({ newAppointment, setNewAppointment }) {
             type="datetime-local"
             value={apptEnd}
             onChange={(e) => setApptEnd(e.target.value)}
-            className="w-full border p-2 rounded"
+            className="w-full border p-2 rounded text-[13px]"
             min={new Date().toISOString().slice(0, 16)}
             required
           />
@@ -232,20 +218,30 @@ export default function AppointmentForm({ newAppointment, setNewAppointment }) {
             type="text"
             value={apptLocation}
             onChange={(e) => setApptLocation(e.target.value)}
-            className="w-full border p-2 rounded"
+            className="w-full border p-2 rounded text-[13px]"
             required
           />
         </label>
 
         <label>
           Patient suchen (Nachname)
-          <input
-            type="text"
-            value={patientSearch}
-            onChange={(e) => setPatientSearch(e.target.value)}
-            placeholder="Nachname eingeben"
-            className="w-full border p-2 rounded mb-2"
-          />
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={patientSearch}
+              onChange={(e) => setPatientSearch(e.target.value)}
+              placeholder="Nachname eingeben"
+              className="w-full border p-2 rounded text-[13px]"
+            />
+            <button
+              type="button"
+              onClick={fetchPatientsBySearch}
+              className="p-2 bg-gray-200 rounded hover:bg-gray-300"
+              title="Suchen"
+            >
+              <Search size={16} />
+            </button>
+          </div>
         </label>
 
         <label>
@@ -253,11 +249,10 @@ export default function AppointmentForm({ newAppointment, setNewAppointment }) {
           <select
             value={apptPatientId}
             onChange={(e) => setApptPatientId(e.target.value)}
-            className="w-full border p-2 rounded"
-            // required
+            className="w-full border p-2 rounded text-[13px]"
           >
             <option value="">Patient auswählen</option>
-            {filteredPatients.map((p) => (
+            {patients.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.firstname} {p.lastname}{" "}
                 {p.birth_date ? `(${p.birth_date.slice(0, 10)})` : ""}
@@ -271,7 +266,7 @@ export default function AppointmentForm({ newAppointment, setNewAppointment }) {
           <select
             value={apptCategoryId}
             onChange={(e) => setApptCategoryId(e.target.value)}
-            className="w-full border p-2 rounded"
+            className="w-full border p-2 rounded text-[13px]"
             required
           >
             <option value="">Kategorie auswählen</option>
@@ -288,7 +283,7 @@ export default function AppointmentForm({ newAppointment, setNewAppointment }) {
           <textarea
             value={apptNotes}
             onChange={(e) => setApptNotes(e.target.value)}
-            className="w-full border p-2 rounded"
+            className="w-full border p-2 rounded text-[13px]"
             required
           />
         </label>
@@ -299,7 +294,7 @@ export default function AppointmentForm({ newAppointment, setNewAppointment }) {
             type="text"
             value={apptTitle}
             onChange={(e) => setApptTitle(e.target.value)}
-            className="w-full border p-2 rounded"
+            className="w-full border p-2 rounded text-[13px]"
             required
           />
         </label>
@@ -309,14 +304,19 @@ export default function AppointmentForm({ newAppointment, setNewAppointment }) {
           <input
             type="file"
             onChange={handleFileChange}
-            className="w-full border p-2 rounded"
+            className="w-full border p-2 rounded text-[13px]"
             accept="*"
           />
           {attachmentName && (
-            <p className="mt-1 text-sm text-gray-600">Ausgewählt: {attachmentName}</p>
+            <p className="mt-1 text-xs text-gray-600">
+              Ausgewählt: {attachmentName}
+            </p>
           )}
         </label>
-        <span>Es wäre besser, die URL des Verzeichnisordners in der Datenbank zu speichern und den Anhang dort zu speichern.</span>
+
+        <p className="text-xs text-gray-500">
+          💡 Tipp: Speichere nur den Pfad in der Datenbank – Datei in einem sicheren Verzeichnis ablegen.
+        </p>
 
         <button
           type="submit"
