@@ -42,10 +42,10 @@ export async function PUT(req, { params }) {
         end: end_conv,
         title,
         notes,
-        category,
-        patient,
+        // category,
+        // patient,
         location,
-        attachements: [attachment],
+        // attachements: [attachment],
       })
       .eq('id', appointmentId);
 
