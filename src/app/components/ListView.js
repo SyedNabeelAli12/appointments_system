@@ -95,7 +95,7 @@ export default function ListView({
 
   return (
     <div className="min-h-screen bg-[#f4f4f8] p-6">
-      {/* Load Older */}
+      {/* load older */}
       <div
         onClick={fetchOlderAppointments}
         className={`text-center text-gray-500 text-sm mb-6 cursor-pointer hover:text-blue-600 hover:underline select-none ${
@@ -145,7 +145,7 @@ export default function ListView({
         )}
       </div>
 
-      {/* Load Newer */}
+      {/* load newer */}
       <div
         onClick={fetchNewerAppointments}
         className={`text-center text-gray-500 text-sm mt-6 cursor-pointer hover:text-blue-600 hover:underline select-none ${

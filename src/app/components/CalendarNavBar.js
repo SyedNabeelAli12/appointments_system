@@ -16,12 +16,9 @@ export default function CalendarNavBar({
   onFilterChange,
   selectedDate,
   onDateChange,
-          newAppointment,
-        setAppointments
 }) {
   const [showFilters, setShowFilters] = useState(false);
 
-  // Separate categories array
   const [categories, setCategories] = useState([]);
 
   const [filters, setFilters] = useState({
@@ -38,12 +35,11 @@ export default function CalendarNavBar({
         const result = await res.json();
 
         if (res.ok && result.labels) {
-          // Normalize: support both `{ label }` or `{ id, name }`
           const formatted = result.labels.map((item, index) => ({
             id: item.id ?? index.toString(),
             name: item.name ?? item.label,
           }));
-          console.log(formatted);
+          // console.log(formatted);
 
           setCategories(formatted);
         } else {
@@ -58,35 +54,25 @@ export default function CalendarNavBar({
   }, []);
 
   const handleFilterChange = (name, value) => {
-    console.log(value);
+    // console.log(value);
     const newFilters = { ...filters, [name]: value };
     setFilters(newFilters);
-    // if (onFilterChange) {
-    //   onFilterChange(newFilters);
-    // }
   };
 
   const dateValue = selectedDate
     ? new Date(selectedDate).toISOString().split("T")[0]
-    : new Date().toISOString().split("T")[0];
+    : formattedDate;
 
   return (
     <div className="relative">
-      {/* Main Navigation Bar */}
       <div className="flex items-center justify-between p-4 bg-white shadow-sm rounded-md">
         <div className="flex items-center space-x-4">
           <div className="flex items-center border rounded-md px-2 py-1 text-sm text-gray-700 bg-white">
             <CalendarIcon className="w-4 h-4 mr-1 text-gray-500" />
-            {/* <input
-              type="date"
-              defaultValue={new Date().toISOString().split("T")[0]}
-              className="bg-transparent focus:outline-none cursor-pointer"
-            /> */}
             <input
               type="date"
               value={dateValue}
               disabled={view == "liste" ? true : false}
-              // defaultValue={new Date().toISOString().split("T")[0]}
               onChange={(e) => onDateChange && onDateChange(e.target.value)}
               className="bg-transparent focus:outline-none cursor-pointer"
             />
@@ -109,7 +95,7 @@ export default function CalendarNavBar({
           </div>
         </div>
 
-        {/* Right section */}
+        {/* right section */}
         <div className="flex items-center space-x-2">
           <button
             onClick={() => setShowFilters(!showFilters)}
@@ -128,7 +114,7 @@ export default function CalendarNavBar({
         </div>
       </div>
 
-      {/* Filter Panel */}
+      {/* filter Panel */}
       {showFilters && (
         <div className="absolute top-full right-0 mt-2 w-full md:w-96 bg-white border rounded-md shadow-lg z-10 p-4">
           <div className="flex justify-between items-center mb-4">
@@ -142,7 +128,7 @@ export default function CalendarNavBar({
           </div>
 
           <div className="space-y-4">
-            {/* Category Dropdown */}
+            {/* category dropdown */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Kategorie
@@ -166,7 +152,7 @@ export default function CalendarNavBar({
               </div>
             </div>
 
-            {/* Date Range */}
+            {/* date range */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Zeitraum
@@ -176,7 +162,7 @@ export default function CalendarNavBar({
                   <CalendarIcon className="w-4 h-4 mr-1 text-gray-500" />
                   <input
                     type="date"
-                    disabled={(view == "liste") ? false : true}
+                    disabled={view == "liste" ? false : true}
                     value={filters.dateFrom}
                     onChange={(e) =>
                       handleFilterChange("dateFrom", e.target.value)
@@ -188,7 +174,7 @@ export default function CalendarNavBar({
                   <CalendarIcon className="w-4 h-4 mr-1 text-gray-500" />
                   <input
                     type="date"
-        disabled={(view == "liste") ? false : true}
+                    disabled={view == "liste" ? false : true}
                     value={filters.dateTo}
                     onChange={(e) =>
                       handleFilterChange("dateTo", e.target.value)
@@ -199,7 +185,7 @@ export default function CalendarNavBar({
               </div>
             </div>
 
-            {/* Search */}
+            {/* search */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Patient suchen
@@ -220,7 +206,7 @@ export default function CalendarNavBar({
               </div>
             </div>
 
-            {/* Action Buttons */}
+            {/* action buttons */}
             <div className="flex justify-end space-x-2 pt-2">
               <button
                 onClick={() => {
@@ -240,7 +226,7 @@ export default function CalendarNavBar({
               <button
                 onClick={() => {
                   setShowFilters(false);
-                  onFilterChange?.(filters); // 🔥 Trigger appointments filtering
+                  onFilterChange?.(filters);
                 }}
                 className="px-4 py-2 bg-black text-white text-sm font-medium rounded-md hover:bg-gray-800"
               >

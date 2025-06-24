@@ -1,8 +1,7 @@
 "use client";
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import WeekCard from "./WeekCard";
 
-// Get Monday as the start of the week
 function getStartOfWeek(date) {
   const d = new Date(date);
   const day = d.getDay();
@@ -12,17 +11,6 @@ function getStartOfWeek(date) {
   return d;
 }
 
-// Format weekday for header
-function formatDay(date) {
-  return date.toLocaleDateString("de-DE", {
-    weekday: "long",
-    day: "numeric",
-    month: "numeric",
-    timeZone: "Europe/Berlin",
-  });
-}
-
-// Get Berlin-localized date
 function getBerlinDate(dateStr) {
   return new Date(
     new Date(dateStr).toLocaleString("en-US", {
@@ -31,7 +19,6 @@ function getBerlinDate(dateStr) {
   );
 }
 
-// Check if two dates are the same day in Berlin time
 function isSameBerlinDay(date1, date2) {
   const d1 = getBerlinDate(date1);
   const d2 = getBerlinDate(date2);
@@ -42,9 +29,44 @@ function isSameBerlinDay(date1, date2) {
   );
 }
 
-// Helper for a stable day key (year-month-day)
 function getDayKey(date) {
   return `day-${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+}
+
+// Client-only component to format the day string
+function FormattedDay({ date }) {
+  const [formatted, setFormatted] = useState("");
+
+  useEffect(() => {
+    setFormatted(
+      date.toLocaleDateString("de-DE", {
+        weekday: "long",
+        day: "numeric",
+        month: "numeric",
+        timeZone: "Europe/Berlin",
+      })
+    );
+  }, [date]);
+
+  return <>{formatted || "..."}</>;
+}
+
+// Client-only component to format hour labels
+function FormattedHour({ hour }) {
+  const [formatted, setFormatted] = useState("");
+
+  useEffect(() => {
+    const d = new Date(2020, 0, 1, hour);
+    setFormatted(
+      d.toLocaleTimeString("de-DE", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      })
+    );
+  }, [hour]);
+
+  return <>{formatted || "..."}</>;
 }
 
 export default function WeeklyCalendarGrid({
@@ -62,12 +84,11 @@ export default function WeeklyCalendarGrid({
     return Array.from({ length: 7 }).map((_, i) => {
       const d = new Date(startOfWeek);
       d.setDate(d.getDate() + i);
-      d.setHours(0, 0, 0, 0); // zero out time for stability
+      d.setHours(0, 0, 0, 0);
       return d;
     });
   }, [startOfWeek]);
 
-  // Hours from 8 to 18 inclusive (11 hours)
   const hours = useMemo(() => Array.from({ length: 11 }, (_, i) => 8 + i), []);
   const startHour = 8;
   const hourHeight = 96;
@@ -84,15 +105,11 @@ export default function WeeklyCalendarGrid({
 
   const totalGridHeight = hours.length * hourHeight;
 
-  // Constant for minus 2 hours in milliseconds
-  const minusTwoHoursMs = 2 * 60 * 60 * 1000;
-
   return (
     <div
       className="relative border border-gray-300"
       style={{ height: totalGridHeight }}
     >
-      {/* Time now line (red) */}
       {isTodayVisible && offsetY >= 0 && offsetY <= totalGridHeight && (
         <div
           className="absolute left-[60px] right-0 z-10 pointer-events-none"
@@ -102,25 +119,17 @@ export default function WeeklyCalendarGrid({
             className="absolute -left-[38px] text-xs text-red-500 bg-white px-1 border border-red-500 rounded select-none"
             style={{ transform: "translateY(-50%)" }}
           >
-            {nowBerlin.toLocaleTimeString("de-DE", {
-              hour: "2-digit",
-              minute: "2-digit",
-              timeZone: "Europe/Berlin",
-              hour12: false, // force 24-hour
-            })}
+            {/* Format time client-side */}
+            <FormattedTime date={nowBerlin} />
           </div>
           <div className="h-px w-full bg-red-500" />
         </div>
       )}
 
-      {/* Calendar grid */}
       <div className="grid grid-cols-8 border-t text-sm">
-        {/* Time header */}
         <div className="bg-gray-50 p-2 font-medium sticky top-0 z-20 border-b border-gray-300">
           Zeit
         </div>
-
-        {/* Day headers */}
         {daysOfWeek.map((day) => {
           const isToday = isSameBerlinDay(day, todayBerlin);
           return (
@@ -130,7 +139,7 @@ export default function WeeklyCalendarGrid({
                 isToday ? "bg-green-100" : "bg-gray-50"
               }`}
             >
-              {formatDay(day)}
+              <FormattedDay date={day} />
             </div>
           );
         })}
@@ -138,25 +147,17 @@ export default function WeeklyCalendarGrid({
         {/* Time rows */}
         {hours.map((hour) => (
           <React.Fragment key={hour}>
-            {/* Hour label — 12-hour format */}
             <div className="border p-2 text-right">
-              {new Date(2020, 0, 1, hour).toLocaleTimeString("de-DE", {
-                hour: "numeric", // numeric hour without leading zero
-                minute: "2-digit",
-                hour12: true, // 12-hour format
-              })}
+              <FormattedHour hour={hour} />
             </div>
 
             {/* Time slots */}
             {daysOfWeek.map((day) => {
               const isToday = isSameBerlinDay(day, todayBerlin);
 
-              // Filter appointments with start time minus 2 hours
               const filteredApps = appointments.filter((app) => {
                 const originalStart = new Date(app.start);
-                const adjustedStart = new Date(
-                  originalStart.getTime() - minusTwoHoursMs
-                );
+                const adjustedStart = new Date(originalStart.getTime());
 
                 return (
                   adjustedStart.getFullYear() === day.getFullYear() &&
@@ -175,12 +176,14 @@ export default function WeeklyCalendarGrid({
                 >
                   {filteredApps.map((app) => (
                     <div key={app.id} className="absolute inset-1">
-                      {/* Pass appointment normally; WeekCard handles its own offset if needed */}
-                      <WeekCard
-                        appointment={app}
-                        newAppointment={newAppointment}
-                        setNewAppointment={setNewAppointment}
-                      />
+                      <div className="text-xs">
+                        {" "}
+                        <WeekCard
+                          appointment={app}
+                          newAppointment={newAppointment}
+                          setNewAppointment={setNewAppointment}
+                        />
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -191,4 +194,22 @@ export default function WeeklyCalendarGrid({
       </div>
     </div>
   );
+}
+
+// Client-only component to format the time string
+function FormattedTime({ date }) {
+  const [formatted, setFormatted] = useState("");
+
+  useEffect(() => {
+    setFormatted(
+      date.toLocaleTimeString("de-DE", {
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: "Europe/Berlin",
+        hour12: false,
+      })
+    );
+  }, [date]);
+
+  return <>{formatted || "..."}</>;
 }

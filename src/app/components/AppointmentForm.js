@@ -15,7 +15,7 @@ export default function AppointmentForm({ newAppointment, setNewAppointment }) {
   const [apptNotes, setApptNotes] = useState("");
   const [apptTitle, setApptTitle] = useState("");
 
-  const [attachment, setAttachment] = useState(null); // will hold base64 string
+  const [attachment, setAttachment] = useState(null); 
   const [attachmentName, setAttachmentName] = useState("");
 
   const [patients, setPatients] = useState([]);
@@ -75,7 +75,7 @@ export default function AppointmentForm({ newAppointment, setNewAppointment }) {
     );
   }, [patientSearch, patients]);
 
-  // Helper: Convert file to base64 string
+  // convert file to base64 string
   function fileToBase64(file) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -96,7 +96,7 @@ export default function AppointmentForm({ newAppointment, setNewAppointment }) {
 
     if (file.size > 200 * 1024) {
       setError("Datei darf maximal 200 KB groß sein.");
-      e.target.value = ""; // reset file input
+      e.target.value = ""; 
       setAttachment(null);
       setAttachmentName("");
       return;
@@ -126,7 +126,7 @@ export default function AppointmentForm({ newAppointment, setNewAppointment }) {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Fehler beim Speichern");
       setSuccessMsg("Termin erfolgreich erstellt!");
-      // Reset form
+      //from reset
       setApptStart("");
       setApptEnd("");
       setApptLocation("");
@@ -156,7 +156,6 @@ export default function AppointmentForm({ newAppointment, setNewAppointment }) {
       !apptStart ||
       !apptEnd ||
       !apptLocation ||
-      // !apptPatientId ||
       !apptCategoryId ||
       !apptNotes ||
       !apptTitle
@@ -190,8 +189,8 @@ export default function AppointmentForm({ newAppointment, setNewAppointment }) {
       category: apptCategoryId,
       notes: apptNotes,
       title: apptTitle,
-      attachment, // base64 string or null
-      attachmentName, // send file name as well
+      attachment, 
+      attachmentName,
     });
   }
 

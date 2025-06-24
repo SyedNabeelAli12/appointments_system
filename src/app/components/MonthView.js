@@ -19,7 +19,6 @@ const daysOfWeek = [
 function getDaysInMonth(year, month) {
   const result = [];
   const date = new Date(year, month, 1);
-  // Adjust so Monday = 0 ... Sunday = 6
   const firstDay = (date.getDay() + 6) % 7;
 
   for (let i = 0; i < firstDay; i++) result.push(null);
@@ -49,7 +48,6 @@ export default function MonthView({
   }, []);
 
   if (!mounted) {
-    // Prevent hydration mismatch by rendering nothing before mount
     return null;
   }
 
@@ -141,7 +139,7 @@ export default function MonthView({
         })}
       </div>
 
-      {/* Sidebar for selected date */}
+      {/* sidebar for selected date */}
       <div className="w-[300px] border-l bg-gray-50 p-4 space-y-4">
         <h2 className="font-semibold text-base">
           {format(selectedInDate, "EEEE, d. MMMM", { locale: de })}{" "}

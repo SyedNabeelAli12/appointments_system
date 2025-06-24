@@ -13,7 +13,9 @@ export default function DownloadAttachmentsButton({ appointmentID }) {
       byteNumbers[i] = byteCharacters.charCodeAt(i);
     }
     const byteArray = new Uint8Array(byteNumbers);
-    const blob = new Blob([byteArray], { type: mimeType || "application/octet-stream" });
+    const blob = new Blob([byteArray], {
+      type: mimeType || "application/octet-stream",
+    });
 
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
@@ -46,7 +48,8 @@ export default function DownloadAttachmentsButton({ appointmentID }) {
       attachments.forEach((dataUrl, idx) => {
         if (typeof dataUrl === "string" && dataUrl.startsWith("data:")) {
           const [header, base64] = dataUrl.split(",");
-          const mimeType = header.match(/data:(.*);base64/)?.[1] || "application/octet-stream";
+          const mimeType =
+            header.match(/data:(.*);base64/)?.[1] || "application/octet-stream";
           const extension = mimeType.split("/")[1] || "bin";
           const filename = `attachment_${idx + 1}.${extension}`;
           downloadAttachment(base64, filename, mimeType);
@@ -66,7 +69,7 @@ export default function DownloadAttachmentsButton({ appointmentID }) {
           onClick={() => {}}
           disabled={loading}
           className="px-4 py-2 text-sm font-medium border rounded-md hover:bg-gray-100 disabled:opacity-50"
-          style={{ visibility: "hidden" }} // placeholder to keep space, remove if you want no cancel button
+          style={{ visibility: "hidden" }}
         >
           Abbrechen
         </button>

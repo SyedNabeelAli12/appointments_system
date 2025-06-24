@@ -2,15 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { X as XIcon } from "lucide-react";
-import DownloadAttachmentsButton from './Downloader';
+import DownloadAttachmentsButton from "./Downloader";
 
 export default function AppointmentEditModal({
   appointment,
   isOpen,
   onClose,
   onSave,
-    newAppointment,
-        setNewAppointment,
+  newAppointment,
+  setNewAppointment,
 }) {
   const [form, setForm] = useState({ ...appointment });
   const [loading, setLoading] = useState(false);
@@ -55,27 +55,49 @@ export default function AppointmentEditModal({
     return null;
   }
 
-  async function handleSave() {
-    const validationError = validateForm();
-    if (validationError) {
-      setError(validationError);
-      return;
-    }
+  async function updateAppointment(appointmentId, formData) {
+  const res = await fetch(`/api/appointments/edit/${appointmentId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(formData),
+  });
 
-    setLoading(true);
-    
-    setError(null);
-    try {
-      await onSave(form);
-      setNewAppointment(!newAppointment)
-      onClose();
-    } catch (err) {
-      setError(err.message || "Fehler beim Speichern");
-    } finally {
-
-      setLoading(false);
-    }
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error || 'Fehler beim Aktualisieren des Termins');
   }
+
+  return await res.json();
+}
+
+
+async function handleSave() {
+  const validationError = validateForm();
+  if (validationError) {
+    setError(validationError);
+    return;
+  }
+
+  setLoading(true);
+  setError(null);
+
+  try {
+    if (form.id) {
+      // Edit existing appointment
+      await updateAppointment(form.id, form);
+    } else {
+      // Create new appointment - assuming your existing onSave does that
+      await onSave(form);
+      setNewAppointment(!newAppointment);
+    }
+    onClose();
+  } catch (err) {
+    setError(err.message || "Fehler beim Speichern");
+  } finally {
+    setLoading(false);
+  }
+}
+
 
   if (!isOpen) return null;
 
@@ -156,7 +178,8 @@ export default function AppointmentEditModal({
           {editableFields.map((field) => (
             <div key={field.name}>
               <label className="block text-sm font-medium text-gray-700">
-                {field.label} {field.required && <span className="text-red-500">*</span>}
+                {field.label}{" "}
+                {field.required && <span className="text-red-500">*</span>}
               </label>
               {field.type === "textarea" ? (
                 <textarea
@@ -195,9 +218,8 @@ export default function AppointmentEditModal({
                 className="w-full bg-gray-100 rounded-md border border-gray-300 p-2 text-sm text-gray-600"
               />
             </div>
-            
           ))}
-<DownloadAttachmentsButton appointmentID={appointment.id}/>
+          <DownloadAttachmentsButton appointmentID={appointment.id} />
 
           {error && (
             <p className="text-red-600 mt-2 text-sm font-medium">{error}</p>
@@ -216,8 +238,6 @@ export default function AppointmentEditModal({
               disabled={loading}
               className="px-4 py-2 bg-black text-white text-sm font-medium rounded-md hover:bg-gray-800"
             >
-
-        
               {loading ? "Speichern..." : "Speichern"}
             </button>
           </div>

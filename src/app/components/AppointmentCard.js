@@ -19,15 +19,13 @@ import AppointmentEditModal from "./AppointmentEditModal";
 import { germanyOffsetMs } from "../common/commonvar";
 
 export default function AppointmentCard({ appointment, onUpdated,newAppointment, setNewAppointment }) {
-  // const [color, setColor] = useState("#999999");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  // Convert ISO strings to Date objects (assumes appointment.start/end are ISO strings)
-  const appointmentStart = new Date(appointment.start); // this is in UTC
-  const start = new Date(appointmentStart.getTime() - germanyOffsetMs);
 
-  // Using appointment.end might be better, but you had appointment.start for end as well, I assume a typo?
-  const appointmentEnd = new Date(appointment.end || appointment.start);
-  const end = new Date(appointmentEnd.getTime() - germanyOffsetMs);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+
+  // Convert ISO strings to Date objects (assumes appointment.start/end are ISO strings)
+  const start = new Date(appointment.start); // this is in UTC
+  const end = new Date(appointment.end || appointment.start);
 
   // Current time in Berlin timezone
   const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Berlin" }));
@@ -48,7 +46,6 @@ export default function AppointmentCard({ appointment, onUpdated,newAppointment,
     minute: "2-digit",
   });
 
-  // Compare two dates by Berlin local day
   const isSameDay = (a, b) =>
     dateTimeFormatter.format(a).slice(0, 10) === dateTimeFormatter.format(b).slice(0, 10);
 
@@ -87,12 +84,12 @@ export default function AppointmentCard({ appointment, onUpdated,newAppointment,
         <HoverCardTrigger>
           <div
             onClick={() => setIsModalOpen(true)}
-            className="bg-white p-4 rounded-2xl border shadow-sm hover:bg-blue-50 transition cursor-pointer flex justify-between items-start"
+            className="bg-white p-4 rounded-1xl border shadow-sm hover:bg-blue-50 transition cursor-pointer flex justify-between items-start"
           >
             <div className="space-y-2">
               <div className="flex items-center space-x-2">
                 <span
-                  className="w-3 h-3 rounded-full"
+                  className="w-3 h-3"
                   style={{ backgroundColor: appointment.categories.color }}
                 ></span>
                 <p

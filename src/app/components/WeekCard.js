@@ -25,11 +25,10 @@ export default function WeekCard({
   const [isModalOpen, setIsModalOpen] = useState(false);
   if (!appointment) return null;
 
-  const appointmentStart = new Date(appointment.start);
-  const appointmentEnd = new Date(appointment.end || appointment.start);
 
-  const start = new Date(appointmentStart.getTime() - germanyOffsetMs);
-  const end = new Date(appointmentEnd.getTime() - germanyOffsetMs);
+
+ const start = new Date(appointment.start); 
+  const end = new Date(appointment.end || appointment.start);
   const now = new Date(new Date().getTime() + germanyOffsetMs);
 
   const isSameDay = (a, b) =>
@@ -94,7 +93,6 @@ export default function WeekCard({
             onClick={() => setIsModalOpen(true)}
             style={{ backgroundColor: appointment?.categories?.color }}
           >
-            {/* Left color strip */}
             <div
               className="w-1.5"
               style={{
@@ -105,9 +103,7 @@ export default function WeekCard({
               }}
             />
 
-            {/* Card Content */}
             <div className="flex-1 p-4 text-sm relative">
-              {/* Checkbox */}
               <div className="absolute top-2 right-2 text-gray-500">
                 {isChecked ? <CheckSquare size={18} /> : <Square size={18} />}
               </div>
@@ -188,7 +184,6 @@ export default function WeekCard({
         </HoverCardContent>
       </HoverCard>
 
-      {/* Modal for editing */}
       <AppointmentEditModal
         appointment={appointment}
         isOpen={isModalOpen}
@@ -201,7 +196,6 @@ export default function WeekCard({
   );
 }
 
-// Utility to darken hex color slightly
 function darkenColor(hex, amount = 0.2) {
   try {
     let col = hex.replace("#", "");

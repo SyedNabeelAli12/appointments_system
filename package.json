@@ -8,7 +8,6 @@
     "start": "next start",
     "lint": "next lint",
     "postinstall": "next build"
-
   },
   "dependencies": {
     "@radix-ui/react-hover-card": "^1.1.14",
@@ -20,6 +19,7 @@
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.13",
     "lucide-react": "^0.522.0",
+    "luxon": "^3.6.1",
     "next": "15.3.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
