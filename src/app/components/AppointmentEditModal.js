@@ -3,6 +3,34 @@
 import { useState, useEffect } from "react";
 import { X as XIcon } from "lucide-react";
 import DownloadAttachmentsButton from "./Downloader";
+import { date_time, toBerlinDateTimeLocalString } from "../common/commonFunctions";
+
+function Loader() {
+  return (
+    <div className="flex justify-center items-center py-4">
+      <svg
+        className="animate-spin h-6 w-6 text-gray-700"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <circle
+          className="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          strokeWidth="4"
+        ></circle>
+        <path
+          className="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+        ></path>
+      </svg>
+    </div>
+  );
+}
 
 export default function AppointmentEditModal({
   appointment,
@@ -13,12 +41,37 @@ export default function AppointmentEditModal({
   setNewAppointment,
 }) {
   const [form, setForm] = useState({ ...appointment });
+  const [assignees, setAssignees] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [assigneesLoading, setAssigneesLoading] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     setForm({ ...appointment });
     setError(null);
+    setAssignees([]);
+
+    async function fetchAssignees() {
+      try {
+        if (!appointment?.id) return;
+        setAssigneesLoading(true);
+
+        const res = await fetch(`/api/appointments_assignee/assignees/${appointment.id}`);
+        const json = await res.json();
+
+        if (res.ok && Array.isArray(json.assignees)) {
+          setAssignees(json.assignees);
+        } else {
+          console.error("Unexpected response:", json);
+        }
+      } catch (err) {
+        console.error("Fehler beim Laden der Zuständigen:", err);
+      } finally {
+        setAssigneesLoading(false);
+      }
+    }
+
+    fetchAssignees();
   }, [appointment]);
 
   function handleChange(e) {
@@ -111,14 +164,14 @@ export default function AppointmentEditModal({
       name: "start",
       type: "datetime-local",
       required: true,
-      formatValue: (v) => (v ? v.slice(0, 16) : ""),
+      formatValue:  (v) => (v ? toBerlinDateTimeLocalString(v) : ""),
     },
     {
       label: "Endzeit",
       name: "end",
       type: "datetime-local",
       required: true,
-      formatValue: (v) => (v ? v.slice(0, 16) : ""),
+      formatValue:  (v) => (v ? toBerlinDateTimeLocalString(v) : ""),
     },
     {
       label: "Ort",
@@ -149,14 +202,17 @@ export default function AppointmentEditModal({
         ? `${form.patients.firstname} ${form.patients.lastname}`
         : "Kein Patient",
     },
-    {
-      label: "Zuständiger Typ",
-      value: form.appointment_assignee?.user_type || "Unbekannt",
-    },
-    {
-      label: "Zuständiger User",
-      value: form.appointment_assignee?.user || "Unbekannt",
-    },
+
+    ...assignees.flatMap((assignee) => [
+      {
+        label: `Zuständiger User`,
+        value: assignee.user || "Unbekannt",
+      },
+      {
+        label: `Zuständiger Typ`,
+        value: assignee.user_type || "Unbekannt",
+      },
+    ]),
   ];
 
   return (
@@ -201,22 +257,29 @@ export default function AppointmentEditModal({
                   required={field.required}
                   className="w-full rounded-md border border-gray-300 p-2 text-sm focus:outline-none focus:ring-1 focus:ring-black focus:border-black"
                 />
-              )}
+              )
+          
+              }
             </div>
           ))}
 
-          {disabledFields.map((field, idx) => (
-            <div key={idx}>
-              <label className="block text-sm font-medium text-gray-700">
-                {field.label}
-              </label>
-              <input
-                value={field.value}
-                disabled
-                className="w-full bg-gray-100 rounded-md border border-gray-300 p-2 text-sm text-gray-600"
-              />
-            </div>
-          ))}
+          {assigneesLoading ? (
+            <Loader />
+          ) : (
+            disabledFields.map((field, idx) => (
+              <div key={idx}>
+                <label className="block text-sm font-medium text-gray-700">
+                  {field.label}
+                </label>
+                <input
+                  value={field.value}
+                  disabled
+                  className="w-full bg-gray-100 rounded-md border border-gray-300 p-2 text-sm text-gray-600"
+                />
+              </div>
+            ))
+          )}
+
           <DownloadAttachmentsButton appointmentID={appointment.id} />
 
           {error && (
@@ -234,9 +297,31 @@ export default function AppointmentEditModal({
             <button
               onClick={handleSave}
               disabled={loading}
-              className="px-4 py-2 bg-black text-white text-sm font-medium rounded-md hover:bg-gray-800"
+              className="px-4 py-2 bg-black text-white text-sm font-medium rounded-md hover:bg-gray-800 flex items-center justify-center space-x-2"
             >
-              {loading ? "Speichern..." : "Speichern"}
+              {loading && (
+                <svg
+                  className="animate-spin h-4 w-4 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                  ></path>
+                </svg>
+              )}
+              <span>{loading ? "Speichern..." : "Speichern"}</span>
             </button>
           </div>
         </div>

@@ -8,6 +8,7 @@ import {
   ChevronDownIcon,
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { formattedDate } from "../common/commonvar";
 
 export default function CalendarNavBar({
   view,
@@ -62,6 +63,8 @@ export default function CalendarNavBar({
   const dateValue = selectedDate
     ? new Date(selectedDate).toISOString().split("T")[0]
     : formattedDate;
+
+  
 
   return (
     <div className="relative">

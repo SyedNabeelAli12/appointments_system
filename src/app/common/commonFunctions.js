@@ -1,10 +1,10 @@
-import { DateTime } from 'luxon';
+import { DateTime } from "luxon";
 
 export function convertBerlinTimeToUTC(dateString) {
-  return DateTime.fromISO(dateString, { zone: 'Europe/Berlin' }).toUTC().toISO();
+  return DateTime.fromISO(dateString, { zone: "Europe/Berlin" })
+    .toUTC()
+    .toISO();
 }
-
-
 
 export function getStartOfWeek(date) {
   const d = new Date(date);
@@ -31,9 +31,47 @@ export function getEndOfMonth(date) {
 }
 
 
-// export function convertBerlinTimeToUTC(dateString) {
-//   // Parse Berlin time as if it were UTC, then shift to real UTC
-//   const berlinDate = new Date(dateString);
-//   const offsetMs = -berlinDate.getTimezoneOffset() * 60 * 1000; // getTimezoneOffset gives the offset in minutes between UTC and local time
-//   return new Date(berlinDate.getTime() - offsetMs).toISOString(); // convert to UTC ISO string
-// }
+export function toBerlinDateTimeLocalString(utcDateString) {
+  if (!utcDateString) {
+    console.warn("toBerlinDateTimeLocalString: empty input");
+    return "";
+  }
+
+  // Normalize input string to ISO 8601 format
+  let isoString = utcDateString.trim();
+
+  // Replace space between date and time with T, if exists and no T present
+  if (!isoString.includes("T") && isoString.includes(" ")) {
+    isoString = isoString.replace(" ", "T");
+  }
+
+  // Replace '+00' or '+00:00' with 'Z' (UTC)
+  isoString = isoString.replace(/\+00(:00)?$/, "Z");
+
+  // Now try to parse the date
+  const utcDate = new Date(isoString);
+  if (isNaN(utcDate)) {
+    console.error("Invalid date passed to toBerlinDateTimeLocalString:", utcDateString, "->", isoString);
+    return "";
+  }
+
+  // Format with Intl.DateTimeFormat in Berlin timezone
+  const dtf = new Intl.DateTimeFormat("de-DE", {
+    timeZone: "Europe/Berlin",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+
+  const parts = dtf.formatToParts(utcDate);
+  const partMap = {};
+  parts.forEach(({ type, value }) => {
+    partMap[type] = value;
+  });
+
+  return `${partMap.year}-${partMap.month}-${partMap.day}T${partMap.hour}:${partMap.minute}`;
+}
+
