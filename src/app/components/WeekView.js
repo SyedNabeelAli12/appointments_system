@@ -119,7 +119,6 @@ export default function WeeklyCalendarGrid({
             className="absolute -left-[38px] text-xs text-red-500 bg-white px-1 border border-red-500 rounded select-none"
             style={{ transform: "translateY(-50%)" }}
           >
-            {/* Format time client-side */}
             <FormattedTime date={nowBerlin} />
           </div>
           <div className="h-px w-full bg-red-500" />
@@ -156,14 +155,12 @@ export default function WeeklyCalendarGrid({
               const isToday = isSameBerlinDay(day, todayBerlin);
 
               const filteredApps = appointments.filter((app) => {
-                const originalStart = new Date(app.start);
-                const adjustedStart = new Date(originalStart.getTime());
-
+                const start = getBerlinDate(app.start);
                 return (
-                  adjustedStart.getFullYear() === day.getFullYear() &&
-                  adjustedStart.getMonth() === day.getMonth() &&
-                  adjustedStart.getDate() === day.getDate() &&
-                  adjustedStart.getHours() === hour
+                  start.getFullYear() === day.getFullYear() &&
+                  start.getMonth() === day.getMonth() &&
+                  start.getDate() === day.getDate() &&
+                  start.getHours() === hour
                 );
               });
 
@@ -174,18 +171,37 @@ export default function WeeklyCalendarGrid({
                     isToday ? "bg-green-50" : ""
                   }`}
                 >
-                  {filteredApps.map((app) => (
-                    <div key={app.id} className="absolute inset-1">
-                      <div className="text-xs">
-                        {" "}
-                        <WeekCard
-                          appointment={app}
-                          newAppointment={newAppointment}
-                          setNewAppointment={setNewAppointment}
-                        />
+                  {filteredApps.map((app) => {
+                    console.log(app.start + app.end);
+                    const start = getBerlinDate(app.start);
+                    console.log("Start", start);
+                    const end = getBerlinDate(app.end);
+                    console.log("End", end);
+                    const durationInHours = (end - start) / (1000 * 60 * 60);
+                    const height = durationInHours * hourHeight;
+                    console.log(height)
+
+                    return (
+                      <div
+                        key={app.id}
+                        className="absolute left-1 right-1 overflow-hidden"
+                        style={{
+                          top: `${(start.getMinutes() / 60) * hourHeight}px`,
+                          height: `${height}px`,
+                          // maxHeight:'90px'
+                        }}
+                      >
+                        {/* <div className="text-xs h-full"> */}
+                          <WeekCard
+                            appointment={app}
+                            newAppointment={newAppointment}
+                            setNewAppointment={setNewAppointment}
+            
+                          />
+                        {/* </div> */}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               );
             })}
@@ -196,7 +212,7 @@ export default function WeeklyCalendarGrid({
   );
 }
 
-// Client-only component to format the time string
+// Client-only component to format the current time string
 function FormattedTime({ date }) {
   const [formatted, setFormatted] = useState("");
 

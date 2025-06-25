@@ -25,9 +25,7 @@ export default function WeekCard({
   const [isModalOpen, setIsModalOpen] = useState(false);
   if (!appointment) return null;
 
-
-
- const start = new Date(appointment.start); 
+  const start = new Date(appointment.start);
   const end = new Date(appointment.end || appointment.start);
   const now = new Date(new Date().getTime() + germanyOffsetMs);
 
@@ -89,7 +87,7 @@ export default function WeekCard({
       <HoverCard>
         <HoverCardTrigger asChild>
           <div
-            className="relative flex rounded-xl shadow-sm border overflow-hidden cursor-pointer"
+            className="relative flex h-full rounded-sm shadow-sm border overflow-hidden cursor-pointer text-[10px]"
             onClick={() => setIsModalOpen(true)}
             style={{ backgroundColor: appointment?.categories?.color }}
           >
@@ -103,18 +101,18 @@ export default function WeekCard({
               }}
             />
 
-            <div className="flex-1 p-4 text-sm relative">
+            <div className="flex-1 p-4 text-[10px] relative">
               <div className="absolute top-2 right-2 text-gray-500">
-                {isChecked ? <CheckSquare size={18} /> : <Square size={18} />}
+                {isChecked ? <CheckSquare size={14} /> : <Square size={14} />}
               </div>
 
               <div className="space-y-2 pr-6">
-                <p className="font-bold text-sm leading-snug">
+                <p className="font-bold text-[10px] leading-snug">
                   {appointment.title}
                 </p>
 
-                <div className="flex items-center gap-2 text-gray-700">
-                  <Clock size={14} />
+                <div className="flex items-center gap-1 text-gray-700">
+                  <Clock size={12} />
                   <span>
                     {start.toLocaleTimeString("de-DE", {
                       hour: "2-digit",
@@ -129,14 +127,14 @@ export default function WeekCard({
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2 text-gray-700">
-                  <MapPin size={14} />
+                <div className="flex items-center gap-1 text-gray-700">
+                  <MapPin size={12} />
                   <span>{appointment.location}</span>
                 </div>
 
                 {appointment.notes && (
-                  <div className="flex items-start gap-2 text-gray-700">
-                    <MessageSquare size={14} className="mt-0.5" />
+                  <div className="flex items-start gap-1 text-gray-700">
+                    <MessageSquare size={12} className="mt-0.5" />
                     <span>{highlightMentions(appointment.notes)}</span>
                   </div>
                 )}
@@ -145,7 +143,7 @@ export default function WeekCard({
           </div>
         </HoverCardTrigger>
 
-        <HoverCardContent className="w-64 text-sm text-gray-800">
+        <HoverCardContent className="w-64 text-[10px] text-gray-800">
           <p>
             <strong>Titel:</strong> {appointment.title}
           </p>
