@@ -1,8 +1,10 @@
-const { createClient } = require('@supabase/supabase-js');
+import { createClient } from '@supabase/supabase-js';
 
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-// console.log(process.env.NEXT_PUBLIC_SUPABASEKEY)
+if (!supabaseUrl || !supabaseKey) {
+  console.error("Supabase URL or key is missing!");
+}
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASEURL
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASEKEY
 export const supabase = createClient(supabaseUrl, supabaseKey);
